@@ -5,3 +5,4 @@ api-version: '1.16'
 description: 'This plugin recreates r/place, but the canvas is 3D'
 load: POSTWORLD
 author: ninathedev
+website: github.com/ninathedev/placemc

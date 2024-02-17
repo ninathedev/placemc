@@ -6,3 +6,12 @@ description: 'This plugin recreates r/place, but the canvas is 3D'
 load: POSTWORLD
 author: ninathedev
 website: github.com/ninathedev/placemc
+commands:
+  reloadconfig:
+    description: Reloads the config.yml file.
+    usage: /<command>
+    permission: place.reloadconf
+permissions:
+  place.reloadconf:
+    description: "Allows you to reload the configuration file"
+    default: op

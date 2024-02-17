@@ -11,7 +11,14 @@ commands:
     description: Reloads the config.yml file.
     usage: /<command>
     permission: place.reloadconf
+  breakonlymode:
+    description: Players will no longer place blocks
+    usage: /<command>
+    permission: place.breakonlymode
 permissions:
   place.reloadconf:
     description: "Allows you to reload the configuration file"
+    default: op
+  place.breakonlymode:
+    description: "Allows you to use a command that makes players never place blocks"
     default: op

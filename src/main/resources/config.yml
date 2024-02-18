@@ -1,0 +1,4 @@
+# Timer of the placing and breaking in seconds. (They share a different timer!)
+timers:
+  place: 30
+  break: 30

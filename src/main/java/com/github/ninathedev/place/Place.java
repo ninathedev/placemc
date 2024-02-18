@@ -3,10 +3,8 @@ package com.github.ninathedev.place;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.FallingBlock;
-import org.bukkit.entity.Player;
+import org.bukkit.World;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -14,6 +12,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -87,11 +86,13 @@ public final class Place extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
+        this.getConfig().options().copyDefaults(true);
+        this.saveConfig();
         getServer().getPluginManager().registerEvents(this, this);
         Objects.requireNonNull(this.getCommand("reloadconfig")).setExecutor(new ReloadConfig());
         Objects.requireNonNull(this.getCommand("breakonlymode")).setExecutor(new BreakOnlyMode());
-        Objects.requireNonNull(this.getCommand("resumemode")).setExecutor(new BreakOnlyMode());
-        Objects.requireNonNull(this.getCommand("pausemode")).setExecutor(new BreakOnlyMode());
+        Objects.requireNonNull(this.getCommand("resumemode")).setExecutor(new ResumeMode());
+        Objects.requireNonNull(this.getCommand("pausemode")).setExecutor(new PauseMode());
         getLogger().info("[WELCOME] Welcome to placemc!");
         getLogger().info("[WELCOME] This plugin expects that all players are in creative mode and");
         getLogger().info("[WELCOME] that the rest of the entire server is not accessible by people.");
@@ -116,7 +117,7 @@ public final class Place extends JavaPlugin implements Listener {
     @EventHandler
     public void onItemDrop(PlayerDropItemEvent e){
         if(Objects.requireNonNull(e.getPlayer().getInventory().getItem(8)).getType().equals(e.getItemDrop().getItemStack().getType())){
-            e.getPlayer().sendMessage("To prevent lag from dropped items, we have disabled dropped items.");
+            e.getPlayer().sendMessage("[place] To prevent lag from dropped items, we have disabled dropped items.");
             e.setCancelled(true);
         }
     }
@@ -135,12 +136,12 @@ public final class Place extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) {
-        List<Entity> entities = event.getEntity().getNearbyEntities(0, 0, 0);
-        for (Entity entity : entities) {
-            if (entity.getType() == EntityType.ENDER_CRYSTAL) {
-                event.setCancelled(true);
-                break;
+    public void onEntitySpawn(EntitySpawnEvent e) {
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity entity : world.getEntities()) {
+                if (entity instanceof EnderCrystal) {
+                    entity.remove();
+                }
             }
         }
     }
@@ -150,7 +151,7 @@ public final class Place extends JavaPlugin implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
         if (!getPlaceMode()) {
-            e.getPlayer().sendMessage("The place is ending!");
+            e.getPlayer().sendMessage("[place] The place is ending!");
             e.setCancelled(true);
             return;
         }
@@ -168,43 +169,46 @@ public final class Place extends JavaPlugin implements Listener {
                 || block == Material.BEEHIVE
                 || block == Material.BARRIER
                 || block == Material.BEDROCK){
-            e.getPlayer().sendMessage("To prevent griefing and potentially breaking the map, we disabled that block.");
+            e.getPlayer().sendMessage("[place] To prevent griefing and potentially breaking the map, we disabled that block.");
             e.setCancelled(true);
             return;
         }
 
         if (playerPlaceTimers.containsKey(e.getPlayer().getUniqueId())) {
-            e.getPlayer().sendMessage("You have "+getPlaceTimeLeft(e.getPlayer())+" second(s) left!");
+            e.getPlayer().sendMessage("[place] [PLACING]  You have "+getPlaceTimeLeft(e.getPlayer())+" second(s) left!");
             e.setCancelled(true);
             return;
         }
 
         addPlayerPlaceTimer(e.getPlayer(), getConfig().getInt("timers.place"));
+        e.getPlayer().sendMessage("[place] [PLACING]  You have "+getPlaceTimeLeft(e.getPlayer())+" second(s) left!");
     }
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent e) {
         Material bucket = e.getBucket();
         if (bucket == Material.LAVA_BUCKET || bucket == Material.WATER_BUCKET) {
-            e.getPlayer().sendMessage("To prevent griefing and potentially breaking the map, we disabled that block.");
+            e.getPlayer().sendMessage("[place] To prevent griefing and potentially breaking the map, we disabled that block.");
             e.setCancelled(true);
         }
     }
+    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
         if (e.getAction() == Action.LEFT_CLICK_BLOCK && e.getPlayer().getGameMode() == GameMode.CREATIVE) {
             if (!getBreakOnly()) e.setCancelled(true);
             Material block = Objects.requireNonNull(e.getClickedBlock()).getType();
             if (block == Material.BARRIER || block == Material.BEDROCK) {
-                e.getPlayer().sendMessage("You can't escape.");
+                e.getPlayer().sendMessage("[place] You can't escape.");
                 e.setCancelled(true);
                 return;
             }
             if (playerBreakTimers.containsKey(e.getPlayer().getUniqueId())) {
-                e.getPlayer().sendMessage("You have "+getBreakTimeLeft(e.getPlayer())+" second(s) left!");
+                e.getPlayer().sendMessage("[place] [BREAKING] You have "+getBreakTimeLeft(e.getPlayer())+" second(s) left!");
                 e.setCancelled(true);
                 return;
             }
 
             addPlayerBreakTimer(e.getPlayer(), getConfig().getInt("timers.break"));
+            e.getPlayer().sendMessage("[place] [BREAKING] You have "+getBreakTimeLeft(e.getPlayer())+" second(s) left!");
         }
     }
 }

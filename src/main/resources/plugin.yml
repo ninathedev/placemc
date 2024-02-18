@@ -15,7 +15,7 @@ commands:
     description: Players will no longer place blocks
     usage: /<command>
     permission: place.modes
-  pausemodemode:
+  pausemode:
     description: Players will no longer place or break blocks
     usage: /<command>
     permission: place.modes

@@ -9,10 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -97,6 +94,9 @@ public final class Place extends JavaPlugin implements Listener {
         getLogger().info("[WELCOME] This plugin expects that all players are in creative mode and");
         getLogger().info("[WELCOME] that the rest of the entire server is not accessible by people.");
         getLogger().info("[WELCOME] Please make sure that nothing is letting the players roam out of the 3D canvas!");
+        getLogger().info("[REMINDER] We advise that you use command blocks to disable end crystals instead of this plugin.");
+        getLogger().info("[REMINDER] (People can't remove the end crystal)");
+        getLogger().info("[REMINDER] Repeating always active command block: \"kill @e[type=end_crystal]\"");
     }
 
     @Override
@@ -136,12 +136,45 @@ public final class Place extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onEntitySpawn(EntitySpawnEvent e) {
-        for (World world : Bukkit.getWorlds()) {
-            for (Entity entity : world.getEntities()) {
-                if (entity instanceof EnderCrystal) {
-                    entity.remove();
-                }
+    public void onEntityExplode(EntityExplodeEvent event) {
+        if (getConfig().getBoolean("disallow-end-crystals")) {
+            Entity entity = event.getEntity();
+
+            if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (getConfig().getBoolean("disallow-end-crystals")) {
+            Entity entity = event.getEntity();
+
+            if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (getConfig().getBoolean("disallow-end-crystals")) {
+            Entity entity = event.getEntity();
+
+            if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamageByBlock(EntityDamageByBlockEvent event) {
+        if (getConfig().getBoolean("disallow-end-crystals")) {
+            Entity entity = event.getEntity();
+
+            if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
+                event.setCancelled(true);
             }
         }
     }
@@ -151,7 +184,6 @@ public final class Place extends JavaPlugin implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
         if (!getPlaceMode()) {
-            e.getPlayer().sendMessage("[place] The place is ending!");
             e.setCancelled(true);
             return;
         }

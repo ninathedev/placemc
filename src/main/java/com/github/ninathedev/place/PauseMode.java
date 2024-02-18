@@ -15,7 +15,7 @@ public class PauseMode implements CommandExecutor {
         }
         Globals.setBreakOnly(false);
         Globals.setPlaceMode(false);
-        Bukkit.broadcastMessage("Please wait; the place is paused.");
+        Bukkit.broadcastMessage("Please wait; the place is paused. (Most likely for backing up the world)");
         return true;
     }
 }

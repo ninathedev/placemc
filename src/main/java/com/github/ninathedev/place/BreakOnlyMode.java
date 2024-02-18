@@ -15,7 +15,7 @@ public class BreakOnlyMode implements CommandExecutor {
         }
         Globals.setBreakOnly(true);
         Globals.setPlaceMode(false);
-        Bukkit.broadcastMessage("The place is ending!");
+        Bukkit.broadcastMessage("The place is resumed!");
         return true;
     }
 }

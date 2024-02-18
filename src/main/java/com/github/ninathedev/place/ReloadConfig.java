@@ -8,11 +8,10 @@ import org.bukkit.command.CommandSender;
 import java.util.Objects;
 
 public class ReloadConfig implements CommandExecutor {
-
-    // This method is called, when somebody uses our command
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         Objects.requireNonNull(Bukkit.getPluginManager().getPlugin("place")).reloadConfig();
+        Bukkit.broadcastMessage("The config file of the place is reloaded. If there exists any bugs, please do not hesitate to report to r/placemc");
         return true;
     }
 }

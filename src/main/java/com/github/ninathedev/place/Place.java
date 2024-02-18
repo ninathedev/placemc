@@ -26,14 +26,49 @@ import java.util.UUID;
 import static com.github.ninathedev.place.Globals.*;
 
 public final class Place extends JavaPlugin implements Listener {
+    private Map<UUID, BukkitRunnable> playerBreakTimers = new HashMap<>();
+    private Map<UUID, BukkitRunnable> playerPlaceTimers = new HashMap<>();
 
+    public void addPlayerBreakTimer(Player player, long delayInSeconds) {
 
+        // Create a new timer
+        BukkitRunnable runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                playerBreakTimers.remove(player.getUniqueId());
+            }
+        };
+
+        // Start the timer
+        runnable.runTaskLater(this, delayInSeconds * 20); // 20 ticks = 1 second
+
+        // Store the timer
+        playerBreakTimers.put(player.getUniqueId(), runnable);
+    }
+    public void addPlayerPlaceTimer(Player player, long delayInSeconds) {
+
+        // Create a new timer
+        BukkitRunnable runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                playerPlaceTimers.remove(player.getUniqueId());
+            }
+        };
+
+        // Start the timer
+        runnable.runTaskLater(this, delayInSeconds * 20); // 20 ticks = 1 second
+
+        // Store the timer
+        playerPlaceTimers.put(player.getUniqueId(), runnable);
+    }
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
         Objects.requireNonNull(this.getCommand("reloadconfig")).setExecutor(new ReloadConfig());
         Objects.requireNonNull(this.getCommand("breakonlymode")).setExecutor(new BreakOnlyMode());
+        Objects.requireNonNull(this.getCommand("resumemode")).setExecutor(new BreakOnlyMode());
+        Objects.requireNonNull(this.getCommand("pausemode")).setExecutor(new BreakOnlyMode());
         getLogger().info("[WELCOME] Welcome to placemc!");
         getLogger().info("[WELCOME] This plugin expects that all players are in creative mode and");
         getLogger().info("[WELCOME] that the rest of the entire server is not accessible by people.");
@@ -42,7 +77,8 @@ public final class Place extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        setPlaceMode(true);
+        setBreakOnly(true);
     }
 
     @EventHandler
@@ -81,43 +117,7 @@ public final class Place extends JavaPlugin implements Listener {
         }
     }
 
-    private Map<UUID, BukkitRunnable> playerBreakTimers = new HashMap<>();
 
-    public void addPlayerBreakTimer(Player player, long delayInSeconds) {
-
-        // Create a new timer
-        BukkitRunnable runnable = new BukkitRunnable() {
-            @Override
-            public void run() {
-                playerBreakTimers.remove(player.getUniqueId());
-            }
-        };
-
-        // Start the timer
-        runnable.runTaskLater(this, delayInSeconds * 20); // 20 ticks = 1 second
-
-        // Store the timer
-        playerBreakTimers.put(player.getUniqueId(), runnable);
-    }
-
-    private Map<UUID, BukkitRunnable> playerPlaceTimers = new HashMap<>();
-
-    public void addPlayerPlaceTimer(Player player, long delayInSeconds) {
-
-        // Create a new timer
-        BukkitRunnable runnable = new BukkitRunnable() {
-            @Override
-            public void run() {
-                playerPlaceTimers.remove(player.getUniqueId());
-            }
-        };
-
-        // Start the timer
-        runnable.runTaskLater(this, delayInSeconds * 20); // 20 ticks = 1 second
-
-        // Store the timer
-        playerPlaceTimers.put(player.getUniqueId(), runnable);
-    }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
@@ -162,6 +162,7 @@ public final class Place extends JavaPlugin implements Listener {
         if (block == Material.BARRIER || block == Material.BEDROCK){
             e.getPlayer().sendMessage("You can't escape.");
             e.setCancelled(true);
+            return;
         }
         if (playerBreakTimers.containsKey(e.getPlayer().getUniqueId())) {
             e.getPlayer().sendMessage("You have a "+getConfig().getInt("timers.break")+" second timer! If you think it has already been surpassed, it is either that the server is lagging or the game is bugged.");

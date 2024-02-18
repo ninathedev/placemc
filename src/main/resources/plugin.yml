@@ -14,11 +14,19 @@ commands:
   breakonlymode:
     description: Players will no longer place blocks
     usage: /<command>
-    permission: place.breakonlymode
+    permission: place.modes
+  pausemodemode:
+    description: Players will no longer place or break blocks
+    usage: /<command>
+    permission: place.modes
+  resumemode:
+    description: Players will continue with the place
+    usage: /<command>
+    permission: place.modes
 permissions:
   place.reloadconf:
     description: "Allows you to reload the configuration file"
     default: op
-  place.breakonlymode:
-    description: "Allows you to use a command that makes players never place blocks"
+  place.modes:
+    description: "MODES!!! :):)"
     default: op

@@ -11,6 +11,6 @@ r/place, but 3D
 - reload the config (yay!)
 - actually implement the place :)
 - add blocks that cant be placed or broke
+- add breakonlymode (whiteout in r/place), pausemode (stops breaking and placing), and resumemode (allows breaking and placing once more)
 
-## todo
-- add a command to copy the canvas, then only allow players to break blocks (breakonlymode already implemented; copying is still the future)
+to copy the canvas, use multiverse!

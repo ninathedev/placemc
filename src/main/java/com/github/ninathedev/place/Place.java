@@ -3,8 +3,10 @@ package com.github.ninathedev.place;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -18,7 +20,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 import static com.github.ninathedev.place.Globals.*;
 
@@ -116,6 +121,7 @@ public final class Place extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onItemDrop(PlayerDropItemEvent e){
+        if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
         if(Objects.requireNonNull(e.getPlayer().getInventory().getItem(8)).getType().equals(e.getItemDrop().getItemStack().getType())){
             e.getPlayer().sendMessage("[place] To prevent lag from dropped items, we have disabled dropped items.");
             e.setCancelled(true);
@@ -136,45 +142,45 @@ public final class Place extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) {
+    public void onEntityExplode(EntityExplodeEvent e) {
         if (getConfig().getBoolean("disallow-end-crystals")) {
-            Entity entity = event.getEntity();
+            Entity entity = e.getEntity();
 
             if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
-                event.setCancelled(true);
+                e.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onEntityDamage(EntityDamageEvent event) {
+    public void onEntityDamage(EntityDamageEvent e) {
         if (getConfig().getBoolean("disallow-end-crystals")) {
-            Entity entity = event.getEntity();
+            Entity entity = e.getEntity();
 
             if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
-                event.setCancelled(true);
+                e.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent e) {
         if (getConfig().getBoolean("disallow-end-crystals")) {
-            Entity entity = event.getEntity();
+            Entity entity = e.getEntity();
 
             if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
-                event.setCancelled(true);
+                e.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onEntityDamageByBlock(EntityDamageByBlockEvent event) {
+    public void onEntityDamageByBlock(EntityDamageByBlockEvent e) {
         if (getConfig().getBoolean("disallow-end-crystals")) {
-            Entity entity = event.getEntity();
+            Entity entity = e.getEntity();
 
             if (entity.getType().equals(EntityType.ENDER_CRYSTAL)) {
-                event.setCancelled(true);
+                e.setCancelled(true);
             }
         }
     }
@@ -184,6 +190,7 @@ public final class Place extends JavaPlugin implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
         if (!getPlaceMode()) {
+            if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
             e.setCancelled(true);
             return;
         }
@@ -200,23 +207,30 @@ public final class Place extends JavaPlugin implements Listener {
                 || block == Material.BEE_NEST
                 || block == Material.BEEHIVE
                 || block == Material.BARRIER
-                || block == Material.BEDROCK){
+                || block == Material.BEDROCK
+                || block == Material.ANVIL
+                || block == Material.CHIPPED_ANVIL
+                || block == Material.DAMAGED_ANVIL){
+            if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
             e.getPlayer().sendMessage("[place] To prevent griefing and potentially breaking the map, we disabled that block.");
             e.setCancelled(true);
             return;
         }
 
         if (playerPlaceTimers.containsKey(e.getPlayer().getUniqueId())) {
+            if (e.getPlayer().hasPermission("place.bypassTimer")) return;
             e.getPlayer().sendMessage("[place] [PLACING]  You have "+getPlaceTimeLeft(e.getPlayer())+" second(s) left!");
             e.setCancelled(true);
             return;
         }
 
+        if (e.getPlayer().hasPermission("place.bypassTimer")) return;
         addPlayerPlaceTimer(e.getPlayer(), getConfig().getInt("timers.place"));
         e.getPlayer().sendMessage("[place] [PLACING]  You have "+getPlaceTimeLeft(e.getPlayer())+" second(s) left!");
     }
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent e) {
+        if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
         Material bucket = e.getBucket();
         if (bucket == Material.LAVA_BUCKET || bucket == Material.WATER_BUCKET) {
             e.getPlayer().sendMessage("[place] To prevent griefing and potentially breaking the map, we disabled that block.");
@@ -226,19 +240,25 @@ public final class Place extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
         if (e.getAction() == Action.LEFT_CLICK_BLOCK && e.getPlayer().getGameMode() == GameMode.CREATIVE) {
-            if (!getBreakOnly()) e.setCancelled(true);
+            if (!getBreakOnly()) {
+                if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
+                e.setCancelled(true);
+            }
             Material block = Objects.requireNonNull(e.getClickedBlock()).getType();
             if (block == Material.BARRIER || block == Material.BEDROCK) {
+                if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
                 e.getPlayer().sendMessage("[place] You can't escape.");
                 e.setCancelled(true);
                 return;
             }
             if (playerBreakTimers.containsKey(e.getPlayer().getUniqueId())) {
+                if (e.getPlayer().hasPermission("place.bypassTimer")) return;
                 e.getPlayer().sendMessage("[place] [BREAKING] You have "+getBreakTimeLeft(e.getPlayer())+" second(s) left!");
                 e.setCancelled(true);
                 return;
             }
 
+            if (e.getPlayer().hasPermission("place.bypassTimer")) return;
             addPlayerBreakTimer(e.getPlayer(), getConfig().getInt("timers.break"));
             e.getPlayer().sendMessage("[place] [BREAKING] You have "+getBreakTimeLeft(e.getPlayer())+" second(s) left!");
         }

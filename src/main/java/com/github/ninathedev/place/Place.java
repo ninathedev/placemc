@@ -210,7 +210,11 @@ public final class Place extends JavaPlugin implements Listener {
                 || block == Material.BEDROCK
                 || block == Material.ANVIL
                 || block == Material.CHIPPED_ANVIL
-                || block == Material.DAMAGED_ANVIL){
+                || block == Material.DAMAGED_ANVIL
+                || block == Material.COMMAND_BLOCK
+                || block == Material.COMMAND_BLOCK_MINECART
+                || block == Material.CHAIN_COMMAND_BLOCK
+                || block == Material.REPEATING_COMMAND_BLOCK){
             if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
             e.getPlayer().sendMessage("[place] To prevent griefing and potentially breaking the map, we disabled that block.");
             e.setCancelled(true);

@@ -7,11 +7,3 @@ disallow-end-crystals: true
 timers:
   place: 30
   break: 30
-
-# These are messages that are broadcast to players whenever you do a command.
-messages:
-  breakOnlyMode: "The place is resumed!" # Might want to troll players here :P
-  pauseMode: "Please wait; the place is paused. (Most likely for backing up the world)"
-  resumeMode: "The place is resumed!"
-  reloadConfig: "The config file of the place is reloaded. If there exists any bugs, please do not hesitate to report to r/placemc"
-  # note: If you reload the config, the reloadConfig message MAY not change, but after the reload it will change.

@@ -12,7 +12,7 @@ public class BreakOnlyMode implements CommandExecutor {
         if (commandSender.hasPermission("place.modes")) return false;
         if (Globals.getBreakOnly() && !Globals.getPlaceMode()) {
             Bukkit.broadcastMessage("rawr :3");
-            return false;
+            return true;
         }
         Globals.setBreakOnly(true);
         Globals.setPlaceMode(false);

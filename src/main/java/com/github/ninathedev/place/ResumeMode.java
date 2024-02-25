@@ -12,11 +12,11 @@ public class ResumeMode implements CommandExecutor {
         if (commandSender.hasPermission("place.modes")) return false;
         if (Globals.getBreakOnly() && Globals.getPlaceMode()) {
             Bukkit.broadcastMessage("rawr :3");
-            return true;
+            return false;
         }
         Globals.setBreakOnly(true);
         Globals.setPlaceMode(true);
         Bukkit.broadcastMessage("The place is resumed!");
-        return true;
+        return false;
     }
 }

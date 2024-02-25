@@ -19,6 +19,9 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +33,53 @@ import static com.github.ninathedev.place.Globals.*;
 public final class Place extends JavaPlugin implements Listener {
     private Map<UUID, Long> playerBreakTimers = new HashMap<>();
     private Map<UUID, Long> playerPlaceTimers = new HashMap<>();
+//    private Map<UUID, BossBar> playerPlaceBossBars = new HashMap<>();
+//    private Map<UUID, BossBar> playerBreakBossBars = new HashMap<>();
 
+//    public void addPlayerPlaceBossBar(Player player, long delayInSeconds) {
+//        addPlayerBossBar(player, delayInSeconds, BarColor.BLUE, playerPlaceBossBars, "Placing");
+//    }
+//
+//    public void addPlayerBreakBossBar(Player player, long delayInSeconds) {
+//        addPlayerBossBar(player, delayInSeconds, BarColor.RED, playerBreakBossBars, "Breaking");
+//    }
+//
+//    private void addPlayerBossBar(Player player, long delayInSeconds, BarColor color, Map<UUID, BossBar> bossBars, String theTitle) {
+//        // Store the total delay for later calculations
+//        final long totalDelayInSeconds = delayInSeconds;
+//        final long[] delay = {delayInSeconds}; // it errors unless i do this idk why
+//        final String title = theTitle;
+//
+//        // Create a new boss bar
+//        BossBar bossBar = Bukkit.createBossBar("Time left: " + delay[0] + " seconds", color, BarStyle.SOLID);
+//
+//        // Add the player to the boss bar
+//        bossBar.addPlayer(player);
+//
+//        // Store the boss bar
+//        bossBars.put(player.getUniqueId(), bossBar);
+//
+//        // Create a new timer
+//        BukkitRunnable runnable = new BukkitRunnable() {
+//            @Override
+//            public void run() {
+//                // Update the boss bar
+//                delay[0]--;
+//                bossBar.setTitle(title);
+//                bossBar.setProgress((double) delay[0] / totalDelayInSeconds);
+//
+//                // Remove the boss bar when the time is up
+//                if (delayInSeconds <= 0) {
+//                    bossBar.removeAll();
+//                    bossBars.remove(player.getUniqueId());
+//                    this.cancel();
+//                }
+//            }
+//        };
+//
+//        // Start the timer
+//        runnable.runTaskTimer(this, 0L, 20L); // 20 ticks = 1 second
+//    }
     public void addPlayerBreakTimer(Player player, long delayInSeconds) {
         // Calculate the end time
         long endTime = System.currentTimeMillis() + delayInSeconds * 1000;
@@ -48,6 +97,9 @@ public final class Place extends JavaPlugin implements Listener {
 
         // Store the timer
         playerBreakTimers.put(player.getUniqueId(), endTime);
+
+        // Use BossBar
+//        addPlayerBreakBossBar(player, delayInSeconds);
     }
     public void addPlayerPlaceTimer(Player player, long delayInSeconds) {
         // Calculate the end time
@@ -66,6 +118,9 @@ public final class Place extends JavaPlugin implements Listener {
 
         // Store the end time
         playerPlaceTimers.put(player.getUniqueId(), endTime);
+
+        // Use BossBar
+//        addPlayerPlaceBossBar(player, delayInSeconds);
     }
 
     public long getPlaceTimeLeft(Player player) {
@@ -85,6 +140,8 @@ public final class Place extends JavaPlugin implements Listener {
         return 0; // Return 0 if there's no timer for the player
     }
 
+
+
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
@@ -102,7 +159,19 @@ public final class Place extends JavaPlugin implements Listener {
         getLogger().info("[REMINDER] We advise that you use command blocks to disable end crystals instead of this plugin.");
         getLogger().info("[REMINDER] (People can't remove the end crystal)");
         getLogger().info("[REMINDER] Repeating always active command block: \"kill @e[type=end_crystal]\"");
+
+        // Checks if server is running paper or spigot
+        try {
+            Class.forName("com.destroystokyo.paper.ParticleBuilder");
+        } catch (ClassNotFoundException e) {
+            getLogger().warning("[WARNING] You are running a Spigot server!");
+            getLogger().warning("[WARNING] Although this plugin will most likely work on Spigot,");
+            getLogger().warning("[WARNING] not only this plugin uses Paper API,");
+            getLogger().warning("[WARNING] but Paper has better support for many players.");
+            getLogger().warning("[WARNING] WE WILL NOT PROVIDE SUPPORT FOR USING A SPIGOT SERVER!");
+        }
     }
+
 
     @Override
     public void onDisable() {
@@ -114,7 +183,7 @@ public final class Place extends JavaPlugin implements Listener {
     public void onPlayerJoinEvent(PlayerJoinEvent e) {
         for (Player player1 : Bukkit.getOnlinePlayers()) {
             for (Player player2 : Bukkit.getOnlinePlayers()) {
-                if (player1 != player2) player1.hidePlayer(player2);
+                if (player1 != player2) player1.hidePlayer(this, player2);
             }
         }
     }

@@ -1,5 +1,5 @@
 name: place
-version: '1.1'
+version: '1.2'
 main: com.github.ninathedev.place.Place
 api-version: '1.16'
 description: 'This plugin recreates r/place, but the canvas is 3D'

@@ -147,14 +147,14 @@ public final class Place extends JavaPlugin implements Listener {
     public void onEnable() {
         setPlaceMode(true);
         setBreakOnly(true);
-        this.saveDefaultConfig();
-        this.getConfig().options().copyDefaults(true);
-        this.saveConfig();
+        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
+        saveConfig();
         getServer().getPluginManager().registerEvents(this, this);
-        this.getCommand("reloadconfig").setExecutor(new ReloadConfig());
-        this.getCommand("breakonlymode").setExecutor(new BreakOnlyMode());
-        this.getCommand("resumemode").setExecutor(new ResumeMode());
-        this.getCommand("pausemode").setExecutor(new PauseMode());
+        getCommand("reloadconfig").setExecutor(new ReloadConfig());
+        getCommand("breakonlymode").setExecutor(new BreakOnlyMode());
+        getCommand("resumemode").setExecutor(new ResumeMode());
+        getCommand("pausemode").setExecutor(new PauseMode());
         getLogger().info("[WELCOME] Welcome to placemc!");
         getLogger().info("[WELCOME] This plugin expects that all players are in creative mode and");
         getLogger().info("[WELCOME] that the rest of the entire server is not accessible by people.");

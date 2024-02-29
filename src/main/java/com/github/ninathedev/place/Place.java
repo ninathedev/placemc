@@ -52,7 +52,7 @@ public final class Place extends JavaPlugin implements Listener {
         final String title = theTitle;
 
         // Create a new boss bar
-        BossBar bossBar = Bukkit.createBossBar("Time left: " + delay[0] + " seconds", color, BarStyle.SOLID);
+        BossBar bossBar = Bukkit.createBossBar(theTitle, color, BarStyle.SOLID);
 
         // Add the player to the boss bar
         bossBar.addPlayer(player);
@@ -184,6 +184,7 @@ public final class Place extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerJoinEvent(PlayerJoinEvent e) {
+        if (!getConfig().getBoolean("display.show-other-players")) return;
         for (Player player1 : Bukkit.getOnlinePlayers()) {
             for (Player player2 : Bukkit.getOnlinePlayers()) {
                 if (player1 != player2) player1.hidePlayer(this, player2);
@@ -200,7 +201,7 @@ public final class Place extends JavaPlugin implements Listener {
 
         for (ItemStack inventoryItem : player.getInventory().getContents()) {
             if (inventoryItem != null && inventoryItem.getType().equals(droppedItem.getType())) {
-                player.sendMessage("[place] To prevent lag from dropped items, we have disabled dropped items.");
+                player.sendMessage("[place] "+getConfig().getString("messages.dropping-items"));
                 e.setCancelled(true);
                 break; // Stop checking once a matching item is found
             }
@@ -270,6 +271,7 @@ public final class Place extends JavaPlugin implements Listener {
     public void onBlockPlace(BlockPlaceEvent e) {
         if (!getPlaceMode()) {
             if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
+            e.getPlayer().sendMessage(getConfig().getString("messages.placing-in-bom"));
             e.setCancelled(true);
             return;
         }
@@ -295,28 +297,30 @@ public final class Place extends JavaPlugin implements Listener {
                 || block == Material.CHAIN_COMMAND_BLOCK
                 || block == Material.REPEATING_COMMAND_BLOCK){
             if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
-            e.getPlayer().sendMessage("[place] To prevent griefing and potentially breaking the map, we disabled that block.");
+            e.getPlayer().sendMessage("[place] "+getConfig().getString("messages.placing-restricted-blocks"));
             e.setCancelled(true);
             return;
         }
 
         if (playerPlaceTimers.containsKey(e.getPlayer().getUniqueId())) {
             if (e.getPlayer().hasPermission("place.bypassTimer")) return;
-            e.getPlayer().sendMessage("[place] [PLACING]  You have "+getPlaceTimeLeft(e.getPlayer())+" second(s) left!");
+            String placeText = getConfig().getString("messages.timers.place").replace("%placeTimer%", String.valueOf(getPlaceTimeLeft(e.getPlayer())));
+            if (getConfig().getBoolean("display.send-timer-in-chat.timer-disapproved")) e.getPlayer().sendMessage(placeText);
             e.setCancelled(true);
             return;
         }
 
         if (e.getPlayer().hasPermission("place.bypassTimer")) return;
         addPlayerPlaceTimer(e.getPlayer(), getConfig().getInt("timers.place"));
-        e.getPlayer().sendMessage("[place] [PLACING]  You have "+getPlaceTimeLeft(e.getPlayer())+" second(s) left!");
+        String placeText = getConfig().getString("messages.timers.place").replace("%placeTimer%", String.valueOf(getPlaceTimeLeft(e.getPlayer())));
+        if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(placeText);
     }
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent e) {
         if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
         Material bucket = e.getBucket();
         if (bucket == Material.LAVA_BUCKET || bucket == Material.WATER_BUCKET) {
-            e.getPlayer().sendMessage("[place] To prevent griefing and potentially breaking the map, we disabled that block.");
+            e.getPlayer().sendMessage("[place] "+getConfig().getString("messages.placing-restricted-blocks"));
             e.setCancelled(true);
         }
     }
@@ -330,20 +334,22 @@ public final class Place extends JavaPlugin implements Listener {
             Material block = Objects.requireNonNull(e.getClickedBlock()).getType();
             if (block == Material.BARRIER || block == Material.BEDROCK) {
                 if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
-                e.getPlayer().sendMessage("[place] You can't escape.");
+                if (getConfig().getBoolean("display.send-timer-in-chat.timer-disapproved")) e.getPlayer().sendMessage("[place] "+getConfig().getString("messages.breaking-restricted-blocks"));
                 e.setCancelled(true);
                 return;
             }
             if (playerBreakTimers.containsKey(e.getPlayer().getUniqueId())) {
                 if (e.getPlayer().hasPermission("place.bypassTimer")) return;
-                e.getPlayer().sendMessage("[place] [BREAKING] You have "+getBreakTimeLeft(e.getPlayer())+" second(s) left!");
+                String breakTest = getConfig().getString("messages.timers.break").replace("%breakTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
+                if (getConfig().getBoolean("display.send-timer-in-chat.timer-disapproved")) e.getPlayer().sendMessage(breakTest);
                 e.setCancelled(true);
                 return;
             }
 
             if (e.getPlayer().hasPermission("place.bypassTimer")) return;
             addPlayerBreakTimer(e.getPlayer(), getConfig().getInt("timers.break"));
-            e.getPlayer().sendMessage("[place] [BREAKING] You have "+getBreakTimeLeft(e.getPlayer())+" second(s) left!");
+            String breakTest = getConfig().getString("messages.timers.break").replace("%breakTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
+            if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(breakTest);
         }
     }
 }

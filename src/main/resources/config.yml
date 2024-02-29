@@ -7,3 +7,32 @@ disallow-end-crystals: true
 timers:
   place: 30
   break: 30
+
+display:
+  # Shows the bossbars of placing and breaking (for timers)
+  show-bossbar: true
+  # Sends the current timer in chat if player places or breaks a block...
+  send-timer-in-chat:
+    # ...when player can place/break a block (not affected by timer-disapproved)
+    timer-approved: false
+    # ...when player can't place/break a block (not affected by timer-approved)
+    timer-disapproved: false
+  # If your server is going to be big, enabling this might lag the players.
+  show-other-players: false
+
+# Messages that are broadcasted to the players
+messages:
+  commands:
+    # might want to troll them here
+    break-only-mode: "The place is resumed!"
+    resume-mode: "The place is resumed!"
+    pause-mode: "Please wait; the place is paused. (Most likely for backing up the world)"
+    reload-config: "The config file of the place is reloaded. If there exists any bugs, please do not hesitate to report to r/placemc"
+  timers:
+    place: "You have %placeTimer% second(s) left!"
+    break: "You have %breakTimer% second(s) left!"
+  breaking-restricted-blocks: "You can't escape."
+  placing-restricted-blocks: "To prevent griefing and potentially breaking the map, we disabled that block."
+  dropping-items: "To prevent lag from dropped items, we have disabled dropped items."
+  # What to send when player places a block during break only mode
+  placing-in-bom: ""

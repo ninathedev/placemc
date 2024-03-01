@@ -46,6 +46,7 @@ public final class Place extends JavaPlugin implements Listener {
     }
 
     private void addPlayerBossBar(Player player, long delayInSeconds, BarColor color, Map<UUID, BossBar> bossBars, String theTitle) {
+        if (!getConfig().getBoolean("display.show-bossbar")) return;
         // Store the total delay for later calculations
         final long totalDelayInSeconds = delayInSeconds;
         final long[] delay = {delayInSeconds}; // it errors unless i do this idk why
@@ -295,7 +296,8 @@ public final class Place extends JavaPlugin implements Listener {
                 || block == Material.COMMAND_BLOCK
                 || block == Material.COMMAND_BLOCK_MINECART
                 || block == Material.CHAIN_COMMAND_BLOCK
-                || block == Material.REPEATING_COMMAND_BLOCK){
+                || block == Material.REPEATING_COMMAND_BLOCK
+                || block == Material.RESPAWN_ANCHOR){
             if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
             e.getPlayer().sendMessage("[place] "+getConfig().getString("messages.placing-restricted-blocks"));
             e.setCancelled(true);

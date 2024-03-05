@@ -312,7 +312,7 @@ public final class Place extends JavaPlugin implements Listener {
             if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
             e.getPlayer().sendMessage(getConfig().getString("messages.placing-in-bom"));
             e.setCancelled(true);
-            return;
+            return; // idk
         }
 
         Material block = e.getBlockPlaced().getType();

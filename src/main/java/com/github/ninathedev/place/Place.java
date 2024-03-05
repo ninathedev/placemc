@@ -48,7 +48,7 @@ public final class Place extends JavaPlugin implements Listener {
     }
 
     public void addPlayerInteractBossBar(Player player, long delayInSeconds) {
-        addPlayerBossBar(player, delayInSeconds, BarColor.GREEN, playerInteractBossBars, "Breaking");
+        addPlayerBossBar(player, delayInSeconds, BarColor.GREEN, playerInteractBossBars, "Interacting");
     }
 
     private void addPlayerBossBar(Player player, long delayInSeconds, BarColor color, Map<UUID, BossBar> bossBars, String theTitle) {

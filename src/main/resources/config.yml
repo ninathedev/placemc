@@ -3,10 +3,11 @@
 # [REMINDER] Repeating always active command block: "kill @e[type=end_crystal]"
 disallow-end-crystals: true
 
-# Timer of the placing and breaking in seconds. (They share a different timer!)
+# Timer of the placing, breaking and interacting in seconds. (They use a different timer!)
 timers:
   place: 60
   break: 60
+  interact: 60
 
 display:
   # Shows the bossbars of placing and breaking (for timers)
@@ -31,6 +32,7 @@ messages:
   timers:
     place: "You have %placeTimer% second(s) left!"
     break: "You have %breakTimer% second(s) left!"
+    interact: "You have %interactTimer% second(s) left!"
   breaking-restricted-blocks: "You can't escape."
   placing-restricted-blocks: "To prevent griefing and potentially breaking the map, we disabled that block."
   dropping-items: "To prevent lag from dropped items, we have disabled dropped items."

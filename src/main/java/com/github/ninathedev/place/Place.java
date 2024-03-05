@@ -34,15 +34,21 @@ import static com.github.ninathedev.place.Globals.*;
 public final class Place extends JavaPlugin implements Listener {
     private Map<UUID, Long> playerBreakTimers = new HashMap<>();
     private Map<UUID, Long> playerPlaceTimers = new HashMap<>();
+    private Map<UUID, Long> playerInteractTimers = new HashMap<>();
     private Map<UUID, BossBar> playerPlaceBossBars = new HashMap<>();
     private Map<UUID, BossBar> playerBreakBossBars = new HashMap<>();
+    private Map<UUID, BossBar> playerInteractBossBars = new HashMap<>();
 
-        public void addPlayerPlaceBossBar(Player player, long delayInSeconds) {
+    public void addPlayerPlaceBossBar(Player player, long delayInSeconds) {
         addPlayerBossBar(player, delayInSeconds, BarColor.BLUE, playerPlaceBossBars, "Placing");
     }
 
     public void addPlayerBreakBossBar(Player player, long delayInSeconds) {
         addPlayerBossBar(player, delayInSeconds, BarColor.RED, playerBreakBossBars, "Breaking");
+    }
+
+    public void addPlayerInteractBossBar(Player player, long delayInSeconds) {
+        addPlayerBossBar(player, delayInSeconds, BarColor.GREEN, playerInteractBossBars, "Breaking");
     }
 
     private void addPlayerBossBar(Player player, long delayInSeconds, BarColor color, Map<UUID, BossBar> bossBars, String theTitle) {
@@ -103,6 +109,29 @@ public final class Place extends JavaPlugin implements Listener {
         // Use BossBar
         addPlayerBreakBossBar(player, delayInSeconds);
     }
+
+    public void addPlayerInteractTimer(Player player, long delayInSeconds) {
+        // Calculate the end time
+        long endTime = System.currentTimeMillis() + delayInSeconds * 1000;
+
+        // Create a new timer
+        BukkitRunnable runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                playerInteractTimers.remove(player.getUniqueId());
+            }
+        };
+
+        // Start the timer
+        runnable.runTaskLater(this, delayInSeconds * 20); // 20 ticks = 1 second
+
+        // Store the timer
+        playerInteractTimers.put(player.getUniqueId(), endTime);
+
+        // Use BossBar
+        addPlayerInteractBossBar(player, delayInSeconds);
+    }
+
     public void addPlayerPlaceTimer(Player player, long delayInSeconds) {
         // Calculate the end time
         long endTime = System.currentTimeMillis() + delayInSeconds * 1000;
@@ -137,6 +166,15 @@ public final class Place extends JavaPlugin implements Listener {
         if (playerBreakTimers.containsKey(player.getUniqueId())) {
             // Calculate the time left in seconds
             long timeLeft = (playerBreakTimers.get(player.getUniqueId()) - System.currentTimeMillis()) / 1000;
+            return timeLeft > 0 ? timeLeft : 0;
+        }
+        return 0; // Return 0 if there's no timer for the player
+    }
+
+    public long getInteractTimeLeft(Player player) {
+        if (playerInteractTimers.containsKey(player.getUniqueId())) {
+            // Calculate the time left in seconds
+            long timeLeft = (playerInteractTimers.get(player.getUniqueId()) - System.currentTimeMillis()) / 1000;
             return timeLeft > 0 ? timeLeft : 0;
         }
         return 0; // Return 0 if there's no timer for the player
@@ -352,6 +390,18 @@ public final class Place extends JavaPlugin implements Listener {
             addPlayerBreakTimer(e.getPlayer(), getConfig().getInt("timers.break"));
             String breakTest = getConfig().getString("messages.timers.break").replace("%breakTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
             if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(breakTest);
+        } else if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getPlayer().getGameMode() == GameMode.CREATIVE) {
+            if (playerInteractTimers.containsKey(e.getPlayer().getUniqueId())) {
+                if (e.getPlayer().hasPermission("place.bypassTimer")) return;
+                String interactTest = getConfig().getString("messages.timers.interact").replace("%interactTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
+                if (getConfig().getBoolean("display.send-timer-in-chat.timer-disapproved")) e.getPlayer().sendMessage(interactTest);
+                e.setCancelled(true);
+                return;
+            }
+            if (e.getPlayer().hasPermission("place.bypassTimer")) return;
+            addPlayerBreakTimer(e.getPlayer(), getConfig().getInt("timers.interact"));
+            String interactTest = getConfig().getString("messages.timers.interact").replace("%interactTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
+            if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(interactTest);
         }
     }
 }

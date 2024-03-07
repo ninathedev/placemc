@@ -23,6 +23,14 @@ commands:
     description: Players will continue with the place
     usage: /<command>
     permission: place.modes
+  pc:
+    description: Changes your gamemode to creative.
+    usage: /<command>
+    permission: place.gamemodes
+  ps:
+    description: Changes your gamemode to spectator.
+    usage: /<command>
+    permission: place.gamemodes
 permissions:
   place.reloadconf:
     description: "Allows you to reload the configuration file"
@@ -36,3 +44,6 @@ permissions:
   place.bypassBlockLimiter:
     description: "Used when you want to place command blocks or remove bedrock and stuff"
     default: op
+  place.gamemodes:
+    description: "Lets players switch gamemodes thru /pc and /ps"
+    default: not op

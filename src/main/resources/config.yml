@@ -29,6 +29,12 @@ messages:
     resume-mode: "The place is resumed!"
     pause-mode: "Please wait; the place is paused. (Most likely for backing up the world)"
     reload-config: "The config file of the place is reloaded. If there exists any bugs, please do not hesitate to report to r/placemc"
+    pc:
+      not-yet: "Successfully set gamemode to: CREATIVE"
+      already: "You are already in creative mode!"
+    ps:
+      not-yet: "Successfully set gamemode to: SPECTATOR"
+      already: "You are already in spectator mode!"
   timers:
     place: "You have %placeTimer% second(s) left!"
     break: "You have %breakTimer% second(s) left!"

@@ -10,12 +10,12 @@ public class PauseMode implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
         if (!commandSender.hasPermission("place.modes")) return false;
         if (!Globals.getBreakOnly() && !Globals.getPlaceMode()) {
-            Bukkit.broadcastMessage("rawr :3");
+            commandSender.sendMessage("rawr :3");
             return false;
         }
         Globals.setBreakOnly(false);
         Globals.setPlaceMode(false);
-        Bukkit.broadcastMessage("Please wait; the place is paused. (Most likely for backing up the world)");
+        Bukkit.broadcastMessage("[place] "+Place.getInstance().getConfig().getString("messages.commands.pause-mode"));
         return true;
     }
 }

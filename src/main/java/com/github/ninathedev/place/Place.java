@@ -179,11 +179,16 @@ public final class Place extends JavaPlugin implements Listener {
         }
         return 0; // Return 0 if there's no timer for the player
     }
+    public static Place instance;
 
+    public static Place getInstance() {
+        return instance;
+    }
 
 
     @Override
     public void onEnable() {
+        instance = this;
         setPlaceMode(true);
         setBreakOnly(true);
         saveDefaultConfig();
@@ -194,6 +199,8 @@ public final class Place extends JavaPlugin implements Listener {
         getCommand("breakonlymode").setExecutor(new BreakOnlyMode());
         getCommand("resumemode").setExecutor(new ResumeMode());
         getCommand("pausemode").setExecutor(new PauseMode());
+        getCommand("pc").setExecutor(new PC());
+        getCommand("ps").setExecutor(new PS());
         getLogger().info("[WELCOME] Welcome to placemc!");
         getLogger().info("[WELCOME] This plugin expects that all players are in creative mode and");
         getLogger().info("[WELCOME] that the rest of the entire server is not accessible by people.");
@@ -354,6 +361,7 @@ public final class Place extends JavaPlugin implements Listener {
         addPlayerPlaceTimer(e.getPlayer(), getConfig().getInt("timers.place"));
         String placeText = getConfig().getString("messages.timers.place").replace("%placeTimer%", String.valueOf(getPlaceTimeLeft(e.getPlayer())));
         if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(placeText);
+        e.getPlayer().giveExpLevels(1);
     }
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent e) {
@@ -390,7 +398,8 @@ public final class Place extends JavaPlugin implements Listener {
             addPlayerBreakTimer(e.getPlayer(), getConfig().getInt("timers.break"));
             String breakTest = getConfig().getString("messages.timers.break").replace("%breakTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
             if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(breakTest);
-        } else if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getPlayer().getGameMode() == GameMode.CREATIVE) {
+            e.getPlayer().giveExpLevels(-1);
+        } else if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (playerInteractTimers.containsKey(e.getPlayer().getUniqueId())) {
                 if (e.getPlayer().hasPermission("place.bypassTimer")) return;
                 String interactTest = getConfig().getString("messages.timers.interact").replace("%interactTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
@@ -399,8 +408,8 @@ public final class Place extends JavaPlugin implements Listener {
                 return;
             }
             if (e.getPlayer().hasPermission("place.bypassTimer")) return;
-            addPlayerBreakTimer(e.getPlayer(), getConfig().getInt("timers.interact"));
-            String interactTest = getConfig().getString("messages.timers.interact").replace("%interactTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
+            addPlayerInteractTimer(e.getPlayer(), getConfig().getInt("timers.interact"));
+            String interactTest = getConfig().getString("messages.timers.interact").replace("%interactTimer%", String.valueOf(getInteractTimeLeft(e.getPlayer())));
             if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(interactTest);
         }
     }

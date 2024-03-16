@@ -1,6 +1,7 @@
 package com.github.ninathedev.place;
 
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.block.CommandBlock;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,6 +18,13 @@ public class PC implements CommandExecutor {
             Player player = (Player) sender;
             if (player.getGameMode() == GameMode.CREATIVE) {
                 player.sendMessage("[place] "+Place.getInstance().getConfig().getString("messages.commands.pc.not-yet"));
+                return true;
+            }
+
+            Location loc = player.getLocation();
+            if (loc.getY() < 0) {
+                player.sendMessage("[place] "+Place.getInstance().getConfig().getString("messages.commands.pc.below-0"));
+                player.teleport(new Location(player.getWorld(), loc.getX(), Place.getInstance().getConfig().getInt("teleport.pc.below-0"), loc.getZ()));
                 return true;
             }
             player.setGameMode(GameMode.CREATIVE);

@@ -1,5 +1,5 @@
 name: place
-version: '1.2'
+version: '1.2.2'
 main: com.github.ninathedev.place.Place
 api-version: '1.16'
 description: 'This plugin recreates r/place, but the canvas is 3D'
@@ -36,7 +36,7 @@ permissions:
     description: "Allows you to reload the configuration file"
     default: op
   place.modes:
-    description: "MODES!!! :):)"
+    description: "Allows you to change the current state of the place"
     default: op
   place.bypassTimer:
     description: "Bypasses the timer"
@@ -45,5 +45,5 @@ permissions:
     description: "Used when you want to place command blocks or remove bedrock and stuff"
     default: op
   place.gamemodes:
-    description: "Lets players switch gamemodes thru /pc and /ps"
+    description: "Lets players switch gamemodes through /pc and /ps"
     default: not op

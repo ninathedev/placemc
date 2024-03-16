@@ -33,47 +33,41 @@ import java.util.UUID;
 import static com.github.ninathedev.place.Globals.*;
 
 public final class Place extends JavaPlugin implements Listener {
-    private Map<UUID, Long> playerBreakTimers = new HashMap<>();
-    private Map<UUID, Long> playerPlaceTimers = new HashMap<>();
-    private Map<UUID, Long> playerInteractTimers = new HashMap<>();
-    private Map<UUID, BossBar> playerPlaceBossBars = new HashMap<>();
-    private Map<UUID, BossBar> playerBreakBossBars = new HashMap<>();
-    private Map<UUID, BossBar> playerInteractBossBars = new HashMap<>();
-
+    private final Map<UUID, Long> playerBreakTimers = new HashMap<>();
+    private final Map<UUID, Long> playerPlaceTimers = new HashMap<>();
+    private final Map<UUID, Long> playerInteractTimers = new HashMap<>();
+    private final Map<UUID, BossBar> playerPlaceBossBars = new HashMap<>();
+    private final Map<UUID, BossBar> playerBreakBossBars = new HashMap<>();
+    private final Map<UUID, BossBar> playerInteractBossBars = new HashMap<>();
     public void addPlayerPlaceBossBar(Player player, long delayInSeconds) {
         addPlayerBossBar(player, delayInSeconds, BarColor.BLUE, playerPlaceBossBars, "Placing");
     }
-
     public void addPlayerBreakBossBar(Player player, long delayInSeconds) {
         addPlayerBossBar(player, delayInSeconds, BarColor.RED, playerBreakBossBars, "Breaking");
     }
-
+    public void addPlayerInteractBossBar(Player player, long delayInSeconds) {
+        addPlayerBossBar(player, delayInSeconds, BarColor.GREEN, playerInteractBossBars, "Interacting");
+    }
     private void addPlayerBossBar(Player player, long delayInSeconds, BarColor color, Map<UUID, BossBar> bossBars, String theTitle) {
         if (!getConfig().getBoolean("display.show-bossbar")) return;
         // Store the total delay for later calculations
         final long totalDelayInSeconds = delayInSeconds;
         final long[] delay = {delayInSeconds}; // it errors unless i do this idk why
         final String title = theTitle;
-
         // Create a new boss bar
         BossBar bossBar = Bukkit.createBossBar(theTitle, color, BarStyle.SOLID);
-
         // Add the player to the boss bar
         bossBar.addPlayer(player);
-
         // Store the boss bar
         bossBars.put(player.getUniqueId(), bossBar);
-
         // Create a new timer
         BukkitRunnable runnable = new BukkitRunnable() {
             @Override
             public void run() {
-                // Update the boss bar
                 delay[0]--;
                 bossBar.setTitle(title);
                 bossBar.setProgress((double) delay[0] / totalDelayInSeconds);
 
-                // Remove the boss bar when the time is up
                 if (bossBar.getProgress() <= 0) {
                     bossBar.removeAll();
                     bossBars.remove(player.getUniqueId());
@@ -81,54 +75,46 @@ public final class Place extends JavaPlugin implements Listener {
                 }
             }
         };
-
         // Start the timer
         runnable.runTaskTimer(this, 0L, 20L); // 20 ticks = 1 second
     }
     public void addPlayerBreakTimer(Player player, long delayInSeconds) {
-        // Calculate the end time
         long endTime = System.currentTimeMillis() + delayInSeconds * 1000;
-
-        // Create a new timer
         BukkitRunnable runnable = new BukkitRunnable() {
             @Override
             public void run() {
                 playerBreakTimers.remove(player.getUniqueId());
             }
         };
-
-        // Start the timer
-        runnable.runTaskLater(this, delayInSeconds * 20); // 20 ticks = 1 second
-
-        // Store the timer
+        runnable.runTaskLater(this, delayInSeconds * 20);
         playerBreakTimers.put(player.getUniqueId(), endTime);
-
-        // Use BossBar
         addPlayerBreakBossBar(player, delayInSeconds);
     }
-
     public void addPlayerPlaceTimer(Player player, long delayInSeconds) {
-        // Calculate the end time
         long endTime = System.currentTimeMillis() + delayInSeconds * 1000;
-
-        // Create a new timer
         BukkitRunnable runnable = new BukkitRunnable() {
             @Override
             public void run() {
                 playerPlaceTimers.remove(player.getUniqueId());
             }
         };
-
-        // Start the timer
-        runnable.runTaskLater(this, delayInSeconds * 20); // 20 ticks = 1 second
-
-        // Store the end time
+        runnable.runTaskLater(this, delayInSeconds * 20);
         playerPlaceTimers.put(player.getUniqueId(), endTime);
-
-        // Use BossBar
         addPlayerPlaceBossBar(player, delayInSeconds);
     }
+    private void addPlayerInteractTimer(Player player, int delayInSeconds) {
+        long endTime = System.currentTimeMillis() + delayInSeconds * 1000L;
+        BukkitRunnable runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                playerInteractTimers.remove(player.getUniqueId());
+            }
+        };
+        runnable.runTaskLater(this, delayInSeconds * 20L);
+        playerInteractTimers.put(player.getUniqueId(), endTime);
+        addPlayerInteractBossBar(player, delayInSeconds);
 
+    }
     public long getPlaceTimeLeft(Player player) {
         if (playerPlaceTimers.containsKey(player.getUniqueId())) {
             // Calculate the time left in seconds
@@ -145,12 +131,21 @@ public final class Place extends JavaPlugin implements Listener {
         }
         return 0; // Return 0 if there's no timer for the player
     }
+    public long getInteractTimeLeft(Player player) {
+        if (playerInteractTimers.containsKey(player.getUniqueId())) {
+            // Calculate the time left in seconds
+            long timeLeft = (playerInteractTimers.get(player.getUniqueId()) - System.currentTimeMillis()) / 1000;
+            return timeLeft > 0 ? timeLeft : 0;
+        }
+        return 0; // Return 0 if there's no timer for the player
+    }
     public static Place instance;
-
     public static Place getInstance() {
         return instance;
     }
-
+    // If true, block is placed.
+    // If false, block is not placed.
+    private boolean block = false;
 
     @Override
     public void onEnable() {
@@ -161,19 +156,17 @@ public final class Place extends JavaPlugin implements Listener {
         getConfig().options().copyDefaults(true);
         saveConfig();
         getServer().getPluginManager().registerEvents(this, this);
-        getCommand("reloadconfig").setExecutor(new ReloadConfig());
-        getCommand("breakonlymode").setExecutor(new BreakOnlyMode());
-        getCommand("resumemode").setExecutor(new ResumeMode());
-        getCommand("pausemode").setExecutor(new PauseMode());
-        getCommand("pc").setExecutor(new PC());
-        getCommand("ps").setExecutor(new PS());
+        Objects.requireNonNull(getCommand("reloadconfig")).setExecutor(new ReloadConfig());
+        Objects.requireNonNull(getCommand("breakonlymode")).setExecutor(new BreakOnlyMode());
+        Objects.requireNonNull(getCommand("resumemode")).setExecutor(new ResumeMode());
+        Objects.requireNonNull(getCommand("pausemode")).setExecutor(new PauseMode());
+        Objects.requireNonNull(getCommand("pc")).setExecutor(new PC());
+        Objects.requireNonNull(getCommand("ps")).setExecutor(new PS());
         getLogger().info("[WELCOME] Welcome to placemc!");
-        getLogger().info("[WELCOME] This plugin expects that all players are in creative mode and");
-        getLogger().info("[WELCOME] that the rest of the entire server is not accessible by people.");
-        getLogger().info("[WELCOME] Please make sure that nothing is letting the players roam out of the 3D canvas!");
-        getLogger().info("[REMINDER] We advise that you use command blocks to disable end crystals instead of this plugin.");
-        getLogger().info("[REMINDER] (People can't remove the end crystal)");
-        getLogger().info("[REMINDER] Repeating always active command block: \"kill @e[type=end_crystal]\"");
+        getLogger().info("[WELCOME] This plugin expects that all players are in creative mode.");
+        getLogger().info("[REMINDER] We advise that you use command blocks to disable end crystals instead of this plugin. (People can't remove the end crystal)");
+        getLogger().info("[REMINDER] To disable end crystals entirely, use a always active repeating command block with the following:");
+        getLogger().info("[REMINDER] \"kill @e[type=end_crystal]\"");
 
         // Checks if server is running paper or spigot
         try {
@@ -190,6 +183,7 @@ public final class Place extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        block = false;
         setPlaceMode(true);
         setBreakOnly(true);
     }
@@ -276,19 +270,18 @@ public final class Place extends JavaPlugin implements Listener {
             }
         }
     }
-
-
-
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOW)
     public void onBlockPlace(BlockPlaceEvent e) {
+        block = true;
         if (!getPlaceMode()) {
             if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
-            e.getPlayer().sendMessage(getConfig().getString("messages.placing-in-bom"));
+            e.getPlayer().sendMessage(Objects.requireNonNull(getConfig().getString("messages.placing-in-bom")));
             e.setCancelled(true);
-            return; // idk
+            return;
         }
 
         Material block = e.getBlockPlaced().getType();
+        // Check if the block is restricted
         if (block == Material.PISTON
                 || block == Material.STICKY_PISTON
                 || block == Material.FIRE
@@ -317,7 +310,7 @@ public final class Place extends JavaPlugin implements Listener {
 
         if (playerPlaceTimers.containsKey(e.getPlayer().getUniqueId())) {
             if (e.getPlayer().hasPermission("place.bypassTimer")) return;
-            String placeText = getConfig().getString("messages.timers.place").replace("%placeTimer%", String.valueOf(getPlaceTimeLeft(e.getPlayer())));
+            String placeText = Objects.requireNonNull(getConfig().getString("messages.timers.place")).replace("%placeTimer%", String.valueOf(getPlaceTimeLeft(e.getPlayer())));
             if (getConfig().getBoolean("display.send-timer-in-chat.timer-disapproved")) e.getPlayer().sendMessage(placeText);
             e.setCancelled(true);
             return;
@@ -325,9 +318,32 @@ public final class Place extends JavaPlugin implements Listener {
 
         if (e.getPlayer().hasPermission("place.bypassTimer")) return;
         addPlayerPlaceTimer(e.getPlayer(), getConfig().getInt("timers.place"));
-        String placeText = getConfig().getString("messages.timers.place").replace("%placeTimer%", String.valueOf(getPlaceTimeLeft(e.getPlayer())));
+        String placeText = Objects.requireNonNull(getConfig().getString("messages.timers.place")).replace("%placeTimer%", String.valueOf(getPlaceTimeLeft(e.getPlayer())));
         if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(placeText);
         e.getPlayer().giveExpLevels(1);
+    }
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInteractBlock(PlayerInteractEvent e) {
+        if (block) {
+            e.setCancelled(true);
+            block = false;
+            return;
+        }
+
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if (playerInteractTimers.containsKey(e.getPlayer().getUniqueId())) {
+                if (e.getPlayer().hasPermission("place.bypassTimer")) return;
+                String interactText = Objects.requireNonNull(getConfig().getString("messages.timers.interact")).replace("%interactTimer%", String.valueOf(getInteractTimeLeft(e.getPlayer())));
+                if (getConfig().getBoolean("display.send-timer-in-chat.timer-disapproved")) e.getPlayer().sendMessage(interactText);
+                e.setCancelled(true);
+                return;
+            }
+
+            if (e.getPlayer().hasPermission("place.bypassTimer")) return;
+            addPlayerInteractTimer(e.getPlayer(), getConfig().getInt("timers.interact"));
+            String interactText = Objects.requireNonNull(getConfig().getString("messages.timers.interact")).replace("%interactTimer%", String.valueOf(getInteractTimeLeft(e.getPlayer())));
+            if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(interactText);
+        }
     }
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent e) {
@@ -354,7 +370,7 @@ public final class Place extends JavaPlugin implements Listener {
             }
             if (playerBreakTimers.containsKey(e.getPlayer().getUniqueId())) {
                 if (e.getPlayer().hasPermission("place.bypassTimer")) return;
-                String breakTest = getConfig().getString("messages.timers.break").replace("%breakTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
+                String breakTest = Objects.requireNonNull(getConfig().getString("messages.timers.break")).replace("%breakTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
                 if (getConfig().getBoolean("display.send-timer-in-chat.timer-disapproved")) e.getPlayer().sendMessage(breakTest);
                 e.setCancelled(true);
                 return;
@@ -362,7 +378,7 @@ public final class Place extends JavaPlugin implements Listener {
 
             if (e.getPlayer().hasPermission("place.bypassTimer")) return;
             addPlayerBreakTimer(e.getPlayer(), getConfig().getInt("timers.break"));
-            String breakTest = getConfig().getString("messages.timers.break").replace("%breakTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
+            String breakTest = Objects.requireNonNull(getConfig().getString("messages.timers.break")).replace("%breakTimer%", String.valueOf(getBreakTimeLeft(e.getPlayer())));
             if (getConfig().getBoolean("display.send-timer-in-chat.timer-approved")) e.getPlayer().sendMessage(breakTest);
             e.getPlayer().giveExpLevels(-1);
         }

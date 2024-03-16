@@ -7,6 +7,12 @@ disallow-end-crystals: true
 timers:
   place: 60
   break: 60
+  interact: 60
+
+teleport:
+  pc:
+    # The y-level the player is teleported if they are below y=0
+    below-0: 10
 
 display:
   # Shows the bossbars of placing and breaking (for timers)
@@ -31,12 +37,14 @@ messages:
     pc:
       not-yet: "Successfully set gamemode to: CREATIVE"
       already: "You are already in creative mode!"
+      below-0: "You can't go below y=0!"
     ps:
       not-yet: "Successfully set gamemode to: SPECTATOR"
       already: "You are already in spectator mode!"
   timers:
     place: "You have %placeTimer% second(s) left!"
     break: "You have %breakTimer% second(s) left!"
+    interact: "You have %interactTimer% second(s) left!"
   breaking-restricted-blocks: "You can't escape."
   placing-restricted-blocks: "To prevent griefing and potentially breaking the map, we disabled that block."
   dropping-items: "To prevent lag from dropped items, we have disabled dropped items."

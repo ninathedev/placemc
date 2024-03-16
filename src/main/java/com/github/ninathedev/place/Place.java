@@ -39,6 +39,8 @@ public final class Place extends JavaPlugin implements Listener {
     private final Map<UUID, BossBar> playerPlaceBossBars = new HashMap<>();
     private final Map<UUID, BossBar> playerBreakBossBars = new HashMap<>();
     private final Map<UUID, BossBar> playerInteractBossBars = new HashMap<>();
+    private final Map<UUID, Boolean> block = new HashMap<>();
+    private Metrics metrics;
     public void addPlayerPlaceBossBar(Player player, long delayInSeconds) {
         addPlayerBossBar(player, delayInSeconds, BarColor.BLUE, playerPlaceBossBars, "Placing");
     }
@@ -145,10 +147,27 @@ public final class Place extends JavaPlugin implements Listener {
     }
     // If true, block is placed.
     // If false, block is not placed.
-    private boolean block = false;
 
     @Override
     public void onEnable() {
+        metrics = new Metrics(this, 21338);
+        metrics.addCustomChart(new Metrics.SimplePie("servers_showing_other_players", () -> {
+            if (getConfig().getBoolean("display.show-other-players")) {
+                return "true";
+            } else {
+                return "false";
+            }
+        }));
+        metrics.addCustomChart(new Metrics.SimplePie("timers_less_than_5_seconds", () -> {
+            if (((getConfig().getInt("timers.place") < 5) && (getConfig().getInt("timers.place") > 0)) || ((getConfig().getInt("timers.break") < 5) && (getConfig().getInt("timers.break") > 0)) || ((getConfig().getInt("timers.interact") < 5) && (getConfig().getInt("timers.interact") > 0))) {
+                return "0 < Timers < 5";
+            } else if ((getConfig().getInt("timers.place") == 0) || (getConfig().getInt("timers.break") == 0) || (getConfig().getInt("timers.interact") == 0)) {
+                return "Timers = 0";
+            } else {
+                return "Timers ≥ 5";
+            }
+        }));
+
         instance = this;
         setPlaceMode(true);
         setBreakOnly(true);
@@ -183,7 +202,8 @@ public final class Place extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        block = false;
+        metrics.shutdown();
+        block.clear();
         setPlaceMode(true);
         setBreakOnly(true);
     }
@@ -272,7 +292,7 @@ public final class Place extends JavaPlugin implements Listener {
     }
     @EventHandler(priority = EventPriority.LOW)
     public void onBlockPlace(BlockPlaceEvent e) {
-        block = true;
+        block.put(e.getPlayer().getUniqueId(), true);
         if (!getPlaceMode()) {
             if (e.getPlayer().hasPermission("place.bypassBlockLimiter")) return;
             e.getPlayer().sendMessage(Objects.requireNonNull(getConfig().getString("messages.placing-in-bom")));
@@ -324,9 +344,9 @@ public final class Place extends JavaPlugin implements Listener {
     }
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteractBlock(PlayerInteractEvent e) {
-        if (block) {
+        if (block.get(e.getPlayer().getUniqueId()) != null && !block.get(e.getPlayer().getUniqueId())) {
             e.setCancelled(true);
-            block = false;
+            block.put(e.getPlayer().getUniqueId(), false);
             return;
         }
 

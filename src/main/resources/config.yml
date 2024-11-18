@@ -1,7 +1,7 @@
 # [REMINDER] We advise that you use command blocks to disable end crystals instead of this plugin.
 # [REMINDER] (People can't remove the end crystal)
 # [REMINDER] Repeating always active command block: "kill @e[type=end_crystal]"
-disallow-end-crystals: true
+disallow-end-crystals: false
 
 # Timer of the placing, breaking and interacting in seconds. (They use a different timer!)
 timers:
